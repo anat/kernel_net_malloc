@@ -13,6 +13,7 @@ static int __init net_malloc_init(void)
 {
   unsigned int id0, id1, id2;
   enum mem_error err;
+  char *text;
 
   mem_init();
 
@@ -30,6 +31,15 @@ static int __init net_malloc_init(void)
 
   err = mem_free(id1);
   printk(KERN_INFO "%s\n", mem_error_str[err]);
+
+  err = mem_write(id1, "hello", 0x1, strlen("hello"));
+  printk(KERN_INFO "%s\n", mem_error_str[err]);
+
+  err = mem_write(id2, "hello", 0x1, strlen("hello"));
+  printk(KERN_INFO "%s\n", mem_error_str[err]);
+
+  err = mem_read(id2, &text, 0x2, 4);
+  printk(KERN_INFO "%s, %s\n", mem_error_str[err], text);
 
   return 0;
 }
