@@ -12,12 +12,24 @@ MODULE_DESCRIPTION("Netmalloc, ?");
 static int __init net_malloc_init(void)
 {
   unsigned int id0, id1, id2;
-  enum mem_error me;
+  enum mem_error err;
 
   mem_init();
 
-  me = mem_alloc(0x100, &id0);
-  printk(KERN_INFO "%s - %u\n", mem_error_str[me], id0);
+  err = mem_alloc(0x100, &id0);
+  printk(KERN_INFO "%s - %u\n", mem_error_str[err], id0);
+
+  err = mem_alloc(0x100, &id1);
+  printk(KERN_INFO "%s - %u\n", mem_error_str[err], id1);
+
+  err = mem_alloc(0x100, &id2);
+  printk(KERN_INFO "%s - %u\n", mem_error_str[err], id2);
+
+  err = mem_free(id1);
+  printk(KERN_INFO "%s\n", mem_error_str[err]);
+
+  err = mem_free(id1);
+  printk(KERN_INFO "%s\n", mem_error_str[err]);
 
   return 0;
 }

@@ -1,12 +1,11 @@
 TARGET		=	netmalloc
-OBJS		=	mem.c netmalloc.c
 
 KDIR		=	/lib/modules/$(shell uname -r)/build
 PWD		=	$(shell pwd)
 
 TARGET		= 	netmalloc
 
-obj-m		=	netmalloc.o
+obj-m		:=	netmalloc.o
 netmalloc-objs	:=	main.o mem.o
 
 all:

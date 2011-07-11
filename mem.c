@@ -8,10 +8,10 @@ const char *mem_error_str[] =
   "Overflow"
 };
 
-static                    LIST_HEAD(mem_list);
-static atomic_t           mem_id;
-static wait_queue_head_t  mem_queue;
-static spinlock_t         mem_lock;
+LIST_HEAD(mem_list);
+atomic_t           mem_id;
+wait_queue_head_t  mem_queue;
+spinlock_t         mem_lock;
 
 static struct mem_struct *    __net_malloc_find(unsigned int id)
 {
@@ -54,31 +54,32 @@ void mem_exit(void)
 
 enum mem_error        mem_alloc(size_t sz, unsigned int *id)
 {
-  struct mem_struct   *mem = NULL;
+  struct mem_struct   *ms = NULL;
 
-  if ((mem = kzalloc(sizeof(*mem), GFP_KERNEL)) == NULL)
+  if ((ms = kzalloc(sizeof(*ms), GFP_KERNEL)) == NULL)
     goto err;
 
-  if ((mem->mem_addr = kzalloc(sz, GFP_KERNEL)) == NULL)
+  if ((ms->mem_addr = kzalloc(sz, GFP_KERNEL)) == NULL)
     goto err;
 
+  INIT_LIST_HEAD(&ms->mem_node);
   *id = atomic_read(&mem_id);
-  mem->mem_id = *id;
+  ms->mem_id = *id;
   atomic_inc(&mem_id);
-  mem->mem_sz = sz;
+  ms->mem_sz = sz;
 
   spin_lock(&mem_lock);
-  list_add_tail(&mem_list, &mem->mem_node);
+  list_add_tail(&mem_list, &ms->mem_node);
   spin_unlock(&mem_lock);
 
   return MEM_SUCCESS;
 
 err:
-  if (mem != NULL)
+  if (ms != NULL)
   {
-    if (mem->mem_addr != NULL)
-      kfree(mem->mem_addr);
-    kfree(mem);
+    if (ms->mem_addr != NULL)
+      kfree(ms->mem_addr);
+    kfree(ms);
   }
   return MEM_ALLOC_FAILED;
 }
