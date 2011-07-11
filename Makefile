@@ -1,10 +1,13 @@
-KDIR	=	/lib/modules/$(shell uname -r)/build
+TARGET		=	netmalloc
+OBJS		=	mem.c netmalloc.c
 
-FILE	= netmalloc
+KDIR		=	/lib/modules/$(shell uname -r)/build
+PWD		=	$(shell pwd)
 
-obj-m	:=	$(FILE).o
+TARGET		= 	netmalloc
 
-#
+obj-m		=	netmalloc.o
+netmalloc-objs	:=	main.o mem.o
 
 all:
 	$(MAKE) -C $(KDIR) SUBDIRS=$(PWD) modules
@@ -14,7 +17,7 @@ clean:
 	$(MAKE) -C $(KDIR) SUBDIRS=$(PWD) clean
 
 load:
-	sudo insmod $(FILE).ko
+	sudo insmod $(TARGET).ko
 
 unload:
-	sudo rmmod $(FILE).ko
+	sudo rmmod $(TARGET).ko
