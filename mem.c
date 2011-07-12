@@ -52,7 +52,7 @@ void                  mem_exit(void)
   spin_unlock(&mem_lock);
 }
 
-enum mem_error        mem_alloc(size_t sz, unsigned int *id)
+enum mem_error        mem_alloc(unsigned int sz, unsigned int *id)
 {
   struct mem_struct   *ms = NULL;
 
@@ -106,9 +106,11 @@ enum mem_error        mem_free(unsigned int id)
   return res;
 }
 
-enum mem_error        mem_read(unsigned int id, void **buf, unsigned long off, size_t sz)
+enum mem_error        mem_read(unsigned int id, void **buf, unsigned int off, unsigned int sz)
 {
   struct mem_struct   *ms = NULL;
+
+  *buf = NULL;
 
   if ((*buf = kzalloc(sz, GFP_KERNEL)) == NULL)
     return MEM_ALLOC_FAILED;
@@ -123,7 +125,7 @@ enum mem_error        mem_read(unsigned int id, void **buf, unsigned long off, s
   return MEM_SUCCESS;
 }
 
-enum mem_error        mem_write(unsigned int id, const void *buf, unsigned long off, size_t sz)
+enum mem_error        mem_write(unsigned int id, const void *buf, unsigned int off, unsigned int sz)
 {
   struct mem_struct   *ms = NULL;
 

@@ -130,7 +130,6 @@ static int networker(void *data)
   return 0;
 }
 
-
 static int __init net_malloc_init(void)
 {
   mem_init();
@@ -143,7 +142,7 @@ static int __init net_malloc_init(void)
   /*
   unsigned int id0, id1, id2;
   enum mem_error err;
-  char *text;
+  void *text;
 
   mem_init();
 

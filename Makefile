@@ -6,7 +6,7 @@ PWD		=	$(shell pwd)
 TARGET		= 	netmalloc
 
 obj-m		:=	netmalloc.o
-netmalloc-objs	:=	main.o mem.o
+netmalloc-objs	:=	main.o mem.o packet.o
 
 all:
 	$(MAKE) -C $(KDIR) SUBDIRS=$(PWD) modules
