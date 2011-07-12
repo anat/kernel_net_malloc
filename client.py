@@ -60,9 +60,21 @@ class NetMalloc:
 
 if __name__ == "__main__":
     nm = NetMalloc('localhost', 4567)
+
+    print('Allocating... ',)
     id = nm.Alloc(0x100)
+    print('Done')
+
+    print('Writing... ',)
     nm.Write(id, b"AAAHello\x11", 0x1, 0x6)
+    print('Done')
+
+    print('Reading... ',)
     data = nm.Read(id, 4, 5)
+    print('Done')
     print(data)
+
+    print('Freeing... ')
     nm.Free(id)
+    print('Done')
 
