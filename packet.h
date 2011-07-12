@@ -1,5 +1,7 @@
-#ifndef		NETW_NETM_H
-#define		NETW_NETM_H
+#ifndef NETW_NETM_H
+#define NETW_NETM_H
+
+#include <linux/types.h>
 
 enum packet_type
 {
@@ -56,6 +58,5 @@ struct nm_packet_write_rq /* Request */
 } __attribute__ ((packed));
 
 struct nm_packet_rp *handle_packet(struct nm_packet_rq *rq, size_t packet_size);
-
 
 #endif

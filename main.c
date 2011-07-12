@@ -7,13 +7,11 @@
 MODULE_LICENSE("GPL");
 MODULE_DESCRIPTION("Netmalloc, ?");
 
-
-
 static int __init net_malloc_init(void)
 {
   unsigned int id0, id1, id2;
   enum mem_error err;
-  char *text;
+  void *text;
 
   mem_init();
 
@@ -39,7 +37,7 @@ static int __init net_malloc_init(void)
   printk(KERN_INFO "%s\n", mem_error_str[err]);
 
   err = mem_read(id2, &text, 0x2, 4);
-  printk(KERN_INFO "%s, %s\n", mem_error_str[err], text);
+  printk(KERN_INFO "%s, %s\n", mem_error_str[err], (char *)text);
 
   return 0;
 }

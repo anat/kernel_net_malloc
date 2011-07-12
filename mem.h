@@ -21,15 +21,15 @@ struct              mem_struct
 {
   unsigned int      mem_id;
   void *            mem_addr;
-  size_t            mem_sz;
+  unsigned int      mem_sz;
   struct list_head  mem_node;
 };
 
 void            mem_init(void);
 void            mem_exit(void);
-enum mem_error  mem_alloc(size_t sz, unsigned int *id);
+enum mem_error  mem_alloc(unsigned int sz, unsigned int *id);
 enum mem_error  mem_free(unsigned int id);
-enum mem_error  mem_read(unsigned int id, void **buf, unsigned long off, size_t sz);
-enum mem_error  mem_write(unsigned int id, const void *buf, unsigned long off, size_t sz);
+enum mem_error  mem_read(unsigned int id, void **buf, unsigned int off, unsigned int sz);
+enum mem_error  mem_write(unsigned int id, const void *buf, unsigned int off, unsigned int sz);
 
 #endif /* _MEM_H_ */
