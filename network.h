@@ -55,5 +55,7 @@ struct nm_packet_write_rq /* Request */
   unsigned char data[0];
 } __attribute__ ((packed));
 
+struct nm_packet_rp *handle_packet(struct nm_packet_rq *rq, size_t packet_size);
+
 
 #endif

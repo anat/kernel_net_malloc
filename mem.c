@@ -110,6 +110,8 @@ enum mem_error        mem_read(unsigned int id, void **buf, unsigned long off, s
 {
   struct mem_struct   *ms = NULL;
 
+  *buf = NULL;
+
   if ((*buf = kzalloc(sz, GFP_KERNEL)) == NULL)
     return MEM_ALLOC_FAILED;
 
