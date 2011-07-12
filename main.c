@@ -3,6 +3,7 @@
 #include <linux/kernel.h>
 #include <net/sock.h>
 #include "mem.h"
+#include "packet.h"
 
 #define TCP_PORT 4567
 
@@ -18,9 +19,10 @@ static int run_network(void *data)
   struct msghdr msg;
   struct iovec iov;
   mm_segment_t oldfs;
-  char buffer[0x200] = "Hello";
+  char buffer[0x200];// = "Hello";
   int len, cc;
   struct socket *csock = data;
+  struct nm_packet_rp *reply;
 
   printk(KERN_INFO "NetMalloc: creating client thread\n");
   while (network_is_running)
@@ -29,25 +31,32 @@ static int run_network(void *data)
       memset(&msg, 0, sizeof(msg));
       msg.msg_iov = &iov;
       msg.msg_iovlen = 1;
-      msg.msg_iov->iov_len = 10;
+      msg.msg_iov->iov_len = 0x200;
       msg.msg_iov->iov_base = buffer;
       oldfs = get_fs();
       set_fs(KERNEL_DS);
-      cc = sock_recvmsg(csock, &msg, 10, 0);
+      cc = sock_recvmsg(csock, &msg, 0x200, 0);
+      set_fs(oldfs);
       printk(KERN_INFO "%d bytes received (%s)\n", cc, buffer);
-      set_fs(oldfs);
 
-      memset(&msg, 0, sizeof(msg));
-      msg.msg_iov = &iov;
-      msg.msg_iovlen = 1;
-      msg.msg_flags = MSG_DONTWAIT;
-      msg.msg_iov->iov_len = strlen(buffer);
-      msg.msg_iov->iov_base = buffer;
-      oldfs = get_fs();
-      set_fs(KERNEL_DS);
-      cc = sock_sendmsg(csock, &msg, strlen(buffer));
-      printk(KERN_INFO "%d bytes sent\n", cc);
-      set_fs(oldfs);
+      reply = handle_packet((struct nm_packet_rq *) buffer, cc);
+
+      if (reply)
+	{
+	  cc = sizeof(struct nm_packet_rp) + reply->data_len;
+	  memset(&msg, 0, sizeof(msg));
+	  msg.msg_iov = &iov;
+	  msg.msg_iovlen = 1;
+	  msg.msg_flags = MSG_DONTWAIT;
+	  msg.msg_iov->iov_len = cc;
+	  msg.msg_iov->iov_base = reply;
+	  oldfs = get_fs();
+	  set_fs(KERNEL_DS);
+	  cc = sock_sendmsg(csock, &msg, cc);
+	  set_fs(oldfs);
+	  printk(KERN_INFO "%d bytes sent\n", cc);
+	  kfree(reply);
+	}
     }
   sock_release(csock);
   printk(KERN_INFO "NetMalloc: closing client thread\n");

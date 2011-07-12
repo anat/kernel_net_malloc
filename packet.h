@@ -3,7 +3,7 @@
 
 #include <linux/types.h>
 
-enum packet_type
+enum
 {
   PT_ALLOC,
   PT_FREE,
