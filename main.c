@@ -41,9 +41,10 @@ static int run_network(void *data)
 	schedule_timeout_interruptible(125);
       else if (cc > 0)
 	{
-	  printk(KERN_INFO "%d bytes received (%s)\n", cc, buffer);
+	  printk(KERN_INFO "%d bytes received\n", cc);
+	  printk(KERN_INFO "TYPE:%d\n", ((struct nm_packet_rq *) buffer)->packet_type);
 	  reply = handle_packet((struct nm_packet_rq *) buffer, cc);
-
+	  printk("reply = %p\n", reply);
 	  if (reply)
 	    {
 	      cc = sizeof(struct nm_packet_rp) + reply->data_len;

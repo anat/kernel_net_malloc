@@ -67,6 +67,11 @@ static struct nm_packet_rp *handle_write_packet(struct nm_packet_write_rq *rq, s
 {
   struct nm_packet_rp *rp;
 
+  //  printk(KERN_INFO "(%ld + %ld + %d) = %ld\n", sizeof(struct nm_packet_rq),
+  //	 sizeof(struct nm_packet_write_rq),
+  //	 rq->size,
+  //	 packet_size
+  //	 );
   if (sizeof(struct nm_packet_rq) + sizeof(struct nm_packet_write_rq) + rq->size != packet_size)
     return NULL;
 
@@ -81,7 +86,10 @@ static struct nm_packet_rp *handle_write_packet(struct nm_packet_write_rq *rq, s
 
 struct nm_packet_rp *handle_packet(struct nm_packet_rq *rq, size_t packet_size)
 {
-  switch (rq->packet_type)
+  int type = rq->packet_type;
+
+  rq = ((struct nm_packet_rq *) ((char *)rq) + 1);
+  switch (type)
   {
     case PT_ALLOC: return handle_alloc_packet((struct nm_packet_alloc_rq *)rq, packet_size);
     case PT_FREE:  return handle_free_packet ((struct nm_packet_free_rq *)rq,  packet_size);
