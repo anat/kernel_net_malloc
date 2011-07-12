@@ -15,47 +15,51 @@ int network_is_running = true;
 
 static int run_network(void *data)
 {
-  struct sockaddr_in sin, csin;
   struct msghdr msg;
   struct iovec iov;
   mm_segment_t oldfs;
   char buffer[0x200];// = "Hello";
-  int len, cc;
+  int cc;
   struct socket *csock = data;
   struct nm_packet_rp *reply;
 
   printk(KERN_INFO "NetMalloc: creating client thread\n");
   while (network_is_running)
     {
-      // TRAITER LES REQUEST / REPLY ICI
       memset(&msg, 0, sizeof(msg));
       msg.msg_iov = &iov;
       msg.msg_iovlen = 1;
+      msg.msg_flags = MSG_DONTWAIT;
       msg.msg_iov->iov_len = 0x200;
       msg.msg_iov->iov_base = buffer;
       oldfs = get_fs();
       set_fs(KERNEL_DS);
-      cc = sock_recvmsg(csock, &msg, 0x200, 0);
+      cc = sock_recvmsg(csock, &msg, 0x200, MSG_DONTWAIT);
       set_fs(oldfs);
-      printk(KERN_INFO "%d bytes received (%s)\n", cc, buffer);
 
-      reply = handle_packet((struct nm_packet_rq *) buffer, cc);
-
-      if (reply)
+      if (cc == -EWOULDBLOCK)
+	schedule_timeout_interruptible(125);
+      else if (cc > 0)
 	{
-	  cc = sizeof(struct nm_packet_rp) + reply->data_len;
-	  memset(&msg, 0, sizeof(msg));
-	  msg.msg_iov = &iov;
-	  msg.msg_iovlen = 1;
-	  msg.msg_flags = MSG_DONTWAIT;
-	  msg.msg_iov->iov_len = cc;
-	  msg.msg_iov->iov_base = reply;
-	  oldfs = get_fs();
-	  set_fs(KERNEL_DS);
-	  cc = sock_sendmsg(csock, &msg, cc);
-	  set_fs(oldfs);
-	  printk(KERN_INFO "%d bytes sent\n", cc);
-	  kfree(reply);
+	  printk(KERN_INFO "%d bytes received (%s)\n", cc, buffer);
+	  reply = handle_packet((struct nm_packet_rq *) buffer, cc);
+
+	  if (reply)
+	    {
+	      cc = sizeof(struct nm_packet_rp) + reply->data_len;
+	      memset(&msg, 0, sizeof(msg));
+	      msg.msg_iov = &iov;
+	      msg.msg_iovlen = 1;
+	      msg.msg_flags = MSG_DONTWAIT;
+	      msg.msg_iov->iov_len = cc;
+	      msg.msg_iov->iov_base = reply;
+	      oldfs = get_fs();
+	      set_fs(KERNEL_DS);
+	      cc = sock_sendmsg(csock, &msg, cc);
+	      set_fs(oldfs);
+	      printk(KERN_INFO "%d bytes sent\n", cc);
+	      kfree(reply);
+	    }
 	}
     }
   sock_release(csock);
@@ -67,7 +71,7 @@ static int networker(void *data)
 {
   struct socket *sock = NULL, *csock = NULL;
   struct sockaddr_in sin, csin;
-  int len;
+  int len, res;
 
   printk(KERN_INFO "NetMalloc: creating main thread\n");
   if (sock_create(PF_INET, SOCK_STREAM, IPPROTO_TCP, &sock) < 0)
@@ -103,28 +107,31 @@ static int networker(void *data)
 
   while (network_is_running)
     {
-      if (sock->ops->accept(sock, csock, 0) < 0)
+      if ((res = sock->ops->accept(sock, csock, SOCK_NONBLOCK)) == -EWOULDBLOCK)
+	schedule_timeout_interruptible(250);
+      else if (res < 0)
 	{
 	  printk(KERN_ERR "NetMalloc: cannot accept incoming connection\n");
 	  goto end;
 	}
-
-      csock->ops->getname(csock, (struct sockaddr *) &csin, &len, 2);
-      printk(KERN_INFO "--- 0x%x is connected ---\n",
-	     htonl(csin.sin_addr.s_addr));
-
-      if (!kthread_run(run_network, csock, "c_networker"))
+      else
 	{
-	  printk(KERN_ERR "NetMalloc: Unable to create client thread\n");
-	  return 0;
+	  csock->ops->getname(csock, (struct sockaddr *) &csin, &len, 2);
+	  printk(KERN_INFO "--- 0x%x is connected ---\n",
+		 htonl(csin.sin_addr.s_addr));
+	  
+	  if (!kthread_run(run_network, csock, "c_networker"))
+	    {
+	      printk(KERN_ERR "NetMalloc: Unable to create client thread\n");
+	      goto end;
+	    }
+	  
+	  if (sock_create(PF_INET, SOCK_STREAM, IPPROTO_TCP, &csock) < 0)
+	    {
+	      printk(KERN_ERR "NetMalloc: cannot create socket\n");
+	      goto end;
+	    }
 	}
-
-      if (sock_create(PF_INET, SOCK_STREAM, IPPROTO_TCP, &csock) < 0)
-	{
-	  printk(KERN_ERR "NetMalloc: cannot create socket\n");
-	  goto end;
-	}
-      //break;
     }
 
  end:
