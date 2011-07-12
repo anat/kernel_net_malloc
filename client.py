@@ -4,6 +4,8 @@ from socket import *
 from struct import *
 
 class NetMalloc:
+    sck = None
+
     def __init__(self, hostname, port):
         self.sck = socket(AF_INET, SOCK_STREAM)
         self.sck.connect((hostname, port))
@@ -48,9 +50,7 @@ class NetMalloc:
         error, id, data_len = unpack(packet, '<BII')
         if data_len == 0:
             return (error, id)
-        return (error, id, data[9:data_len + 9]
-
-    sck = None
+        return (error, id, data[9:data_len + 9])
 
 if __name__ == "__main__":
     nm = NetMalloc('localhost', 8888)
