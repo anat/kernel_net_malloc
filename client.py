@@ -53,10 +53,10 @@ class NetMalloc:
         sz += 9
         packet = self.sck.recv(sz)
 
-        error, id, data_len = unpack('<BII', packet)
+        error, id, data_len = unpack('<BII', packet[0:9])
         if data_len == 0:
             return (error, id)
-        return (error, id, data[9:data_len + 9])
+        return (error, id, packet[9:data_len + 9])
 
 if __name__ == "__main__":
     nm = NetMalloc('localhost', 4567)
@@ -66,7 +66,8 @@ if __name__ == "__main__":
     print('Done')
 
     print('Writing... ',)
-    nm.Write(id, b"AAAHello\x11", 0x1, 0x6)
+    s = b'AAAHello\x11'
+    nm.Write(id, s, 0x1, len(s))
     print('Done')
 
     print('Reading... ',)
