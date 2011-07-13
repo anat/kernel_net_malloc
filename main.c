@@ -37,14 +37,14 @@ static int run_network(void *data)
       cc = sock_recvmsg(csock, &msg, sizeof(buffer), MSG_DONTWAIT);
       set_fs(oldfs);
 
-      if (cc == -EWOULDBLOCK)
+      if (!cc)
+	break;
+      else if (cc == -EWOULDBLOCK)
         schedule_timeout_interruptible(125);
       else if (cc > 0)
 	{
 	  printk(KERN_INFO "%d bytes received\n", cc);
-	  printk(KERN_INFO "TYPE:%d\n", ((struct nm_packet_rq *) buffer)->packet_type);
 	  reply = handle_packet((struct nm_packet_rq *) buffer, cc);
-	  printk("reply = %p\n", reply);
 	  if (reply)
 	    {
 	      cc = sizeof(struct nm_packet_rp) + reply->data_len;

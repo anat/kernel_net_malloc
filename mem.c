@@ -121,6 +121,7 @@ enum mem_error        mem_read(unsigned int id, void **buf, unsigned int off, un
   if (off > ms->mem_sz || sz > ms->mem_sz || off + sz > ms->mem_sz)
     return MEM_OVERFLOW;
 
+  printk(KERN_INFO "Offset = %d\n", off);
   memcpy(*buf, ms->mem_addr + off, sz);
   return MEM_SUCCESS;
 }

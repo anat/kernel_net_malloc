@@ -41,6 +41,7 @@ static struct nm_packet_rp *handle_read_packet(struct nm_packet_read_rq *rq, siz
   if (sizeof(struct nm_packet_rq) + sizeof(struct nm_packet_read_rq) != packet_size)
     return NULL;
 
+  printk(KERN_INFO "offset = %d\n", rq->off);
   error = mem_read(rq->id, &buf, rq->off, rq->size);
   if (error != MEM_SUCCESS)
   {
